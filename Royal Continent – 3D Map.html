@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Royal Continent – 3D Map</title>
+<style>
+:root{--bg:#f4efe4;--fg:#2b2418;--card:#fffaf0;--line:#b9ad94;--muted:#6f6552;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#efe6d2;--card:#26221a;--line:#5b5140;--muted:#a89c82}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#efe6d2;--card:#26221a;--line:#5b5140;--muted:#a89c82}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 Georgia,'Times New Roman',serif}
+main{max-width:1250px;margin:0 auto;padding:14px}
+h1{margin:0 0 4px;font-size:22px;letter-spacing:.08em}p.s{margin:0 0 10px;color:var(--muted);font-size:13px}
+.g{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px}
+@media(max-width:860px){.g{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+#stage{position:relative;height:66vh;min-height:400px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0b1422}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+#tb{position:absolute;top:8px;left:8px;max-width:calc(100% - 100px);display:flex;gap:6px;flex-wrap:wrap}
+#tb button{width:auto;margin:0;padding:4px 9px;font-size:12px;background:rgba(20,18,14,.75);color:#efe6d2;border-color:#7a6d55}
+#tb button.on{background:#b4761f}
+#ro{position:absolute;bottom:38px;left:8px;color:#efe6d2;font-size:12px;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:5px;max-width:90%}
+#sb{position:absolute;bottom:8px;right:8px;color:#efe6d2;font-size:11px;text-align:center}#sbl{height:6px;border:2px solid #efe6d2;border-top:none;margin:0 auto}
+#cp{position:absolute;top:8px;right:8px;width:78px;height:78px;pointer-events:none}
+.eb{height:10px;border-radius:5px;margin:6px 0 2px;background:linear-gradient(90deg,#0f2a4a,#2f8a9c,#dcc88e,#557a35,#8d9a55,#8a8570,#f6f4fc)}
+#hint{position:absolute;bottom:8px;left:8px;color:#d9ceb4;font-size:12px;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:5px}
+label{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+select,button{width:100%;padding:6px;font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:5px}
+button{cursor:pointer;margin-top:8px}
+.lg span{display:inline-block;margin-right:10px;font-size:12px}.lg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px;border:1px solid #888}
+.rl{font-size:13px;margin:0;padding:0;list-style:none}
+.rl li{border-left:4px solid;padding:3px 0 3px 8px;margin:6px 0}
+small{display:block;color:var(--muted);font-size:12px}
+.sum{font-size:13px;background:var(--bg);border-radius:6px;padding:6px 8px;margin-top:6px}
+#dl{max-height:230px;overflow:auto;font-size:13px}
+#dl div{padding:4px 2px;border-bottom:1px solid var(--line);cursor:pointer}#dl div:hover{background:var(--bg)}
+#err{padding:20px;color:#fff}
+</style></head><body><main>
+<h1>THE ROYAL CONTINENT</h1>
+<p class="s">Fan-made 3D schematic of the Royal Continent: 105 named zones across five provinces, six factions with warmasters (press Provinces to see who controls what), live weather, time zones and silver costs. Tiers, silver figures and weather are estimates, not official game data.</p>
+<div class="g"><div>
+<div id="stage"><div id="tb"><button id="bP">Provinces</button><button id="bR">Reset view</button><button id="bT">Top view</button><button id="bL" class="on">Labels</button><button id="bD" class="on">Roads</button><button id="bS">Spin</button><button id="bG" class="on">Grid</button><button id="bC">Contours</button><button id="bK" class="on">Clouds</button><button id="bW" class="on">Weather</button><button id="bN" class="on">Names</button><button id="vN" title="View from north">From N</button><button id="vE">From E</button><button id="vS">From S</button><button id="vW">From W</button><button id="vL" title="Low angle">Low</button><button id="vU" title="Look up from underwater">Under</button></div><div id="ro">Move the cursor over the map for coordinates and elevation.</div><div id="hint">Drag: rotate on any side · Right-drag or two fingers: pan · Scroll or pinch: zoom · Click zones to set a route</div><svg id="cp" viewBox="-40 -40 80 80"><g id="cpg"><circle r="36" fill="rgba(20,18,14,.6)" stroke="#d9ceb4"/><path d="M0-27L6 0 0 5-6 0Z" fill="#e5484d"/><path d="M0 27L6 0 0-5-6 0Z" fill="#d9ceb4"/><g fill="#efe6d2" font-size="10" font-family="Georgia" text-anchor="middle"><text y="-29">N</text><text y="34">S</text><text x="30" y="3.5">E</text><text x="-30" y="3.5">W</text></g></g></svg><div id="sb"><div id="sbl"></div><span id="sbt"></span></div></div>
+<div class="card lg" style="margin-top:10px"><span><i style="background:#3b82f6"></i>Blue</span><span><i style="background:#eab308"></i>Yellow</span><span><i style="background:#ef4444"></i>Red</span><br><span>🏰 City</span><span>🔺 Solo dungeon</span><span>🔷 Group dungeon</span><span>⭕ Avalon road</span><br><b style="font-size:12px">Factions:</b> <span><i style="background:#f2f2f2"></i>Fort Sterling</span><span><i style="background:#3fa34d"></i>Lymhurst</span><span><i style="background:#2f6fd6"></i>Martlock</span><span><i style="background:#8a4fd0"></i>Thetford</span><span><i style="background:#e8821e"></i>Bridgewatch</span><span><i style="background:#111"></i>Caerleon</span><div class="eb"></div><small style="display:flex;justify-content:space-between"><em>Deep sea</em><em>Sea level</em><em>Lowland</em><em>3,500 m</em></small></div>
+</div><div>
+<div class="card" id="info" style="min-height:120px">Hover a zone or city.</div>
+<div class="card"><b>Factions &amp; warmasters</b><select id="ps"></select><div id="pd" style="margin-top:6px;font-size:13px"></div></div>
+<div class="card"><b>Time &amp; weather</b><label>UTC time <span id="tt"></span></label><input type="range" id="tl" min="0" max="24" step="0.25" style="width:100%"><div style="display:flex;gap:6px"><button id="tLive">Live</button><button id="tPlay">Play</button></div><div id="pt" style="margin-top:6px;font-size:13px"></div></div>
+<div class="card"><b>Route planner</b>
+<label>From</label><select id="a"></select><label>To</label><select id="b"></select>
+<label>Travel mode</label><select id="mo"><option value="walk">On foot (tolls only)</option><option value="mount" selected>Riding mount</option><option value="cart">Cargo ox (heavy load)</option></select>
+<label>Optimise for</label><select id="op"><option value="jumps">Fewest jumps</option><option value="silver">Lowest silver cost</option><option value="safe">Safest path</option></select>
+<label>Avoid</label><select id="v"><option value="0">Nothing</option><option value="1">Red zones</option><option value="2">Yellow and red zones</option></select>
+<button id="go">Find route</button><div id="out" style="margin-top:8px"></div></div>
+<div class="card"><b>Dungeons</b><label>Filter</label><select id="df"><option value="">All</option><option>Solo</option><option>Group</option><option>Avalon road</option><option>World boss</option></select><div id="dl" style="margin-top:6px"></div></div>
+</div></div></main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+try{(function(){
+const C={blue:'#3b82f6',yellow:'#eab308',red:'#ef4444',black:'#111'};
+const ORD=['blue','yellow','red','black'];
+const RISK={blue:'Safe – no PvP',yellow:'Some PvP risk',red:'High-risk PvP',black:'Extreme-risk, full-loot PvP'};
+const TOLL={blue:100,yellow:250,red:600,black:1200};
+const MD={walk:{n:'On foot',toll:1,up:0,sec:90},mount:{n:'Riding mount',toll:1,up:120,sec:35},cart:{n:'Cargo ox',toll:1.5,up:220,sec:60}};
+const DF={solo:{yellow:600,red:1800,black:4500},group:{red:4000,black:9000}};
+const REG=[
+{n:'Fort Sterling',z:'Mountain Province',dir:'North-East',a:-72,k:'snow',r:'Wood, Ore',t:'Snow-capped mountains and arctic cold',col:0x5d8fd0,blue:['Mountain Cross','Coldmarrow','Runnel Sink','Snowdon Plain','Frostpeak Crag','Croker Hill','Anchorwood','Hardknott Pass'],yel:['Glencairn','Scafell','Cairn Darrow','Malag Creag','Pen-y-Ghent'],red:['Bitteras','Kettlescar','Deadly Vale','Cairn Inis','Whitepeak','Deadwater Basin'],mon:['Queen Ysolde Frostmere','Queen of the Frost Peaks'],cl:{c:'Snow',alt:'Clear',t:-6,a:6,h:70,w:18}},
+{n:'Thetford',z:'Swamp Province',dir:'East',a:0,k:'swamp',r:'Fiber, Ore',t:'Swamp, mud and ponds',col:0x3f8f8a,blue:['Swamp Cross','Siltshore','Willow Marsh','Ganderground','Pinecopse Marsh','Wellsin Basin','Lowwater Fen','Elmwood'],yel:['Mudfoot Sump','Toadfen','Slither Fen','Gnatfen','Bogwood'],red:['Fenn Moer','Slithercrag','Weeping Fen','Smugglers Bay','Corpsewood'],mon:['Duchess Morwenna Fenwick','Regent of the Fens'],cl:{c:'Fog',alt:'Rain',t:17,a:5,h:90,w:6}},
+{n:'Lymhurst',z:'Forest Province',dir:'South-East',a:72,k:'forest',r:'Wood, Fiber',t:'Lush green forest and hills',col:0x3f9a4a,blue:['Forest Cross','Splitwood Copse','Birchcopse','Greenstone Glade','Willow Wood','Murkwright','Longfallow Stump','Highbole Glen'],yel:['Redwood Copse','Oakhaven','Yew Wood','Larchwood Copse','Wyre Forest','Shaded Grove'],red:['Knollswood','Murderwold','Timberscar Dell','Loggerhead Deep','Settlewood','Blackwood Valley'],mon:['High Lord Aldric Thornwood','Warden-King of the Greenwood'],cl:{c:'Rain',alt:'Clear',t:13,a:6,h:75,w:10}},
+{n:'Bridgewatch',z:'Steppe Province',dir:'South-West',a:144,k:'desert',r:'Hide, Stone',t:'Dry, cracked steppe and canyon desert',col:0xd9822b,blue:['Steppe Cross','Sandflats','Deadvein Gulch','Redstone Plain','Ashenrock','Sweetwater Basin','Siltbrush','Shallowshore'],yel:['Drytop','Coyote Canyon','Rattlesnake Canyon','Slowtree Basin','Saffron Well'],red:['Smokehole Ridge','Deadtree Enclave','Redstone Gorge','Skysand Ridge','Dustvein Quarry'],mon:['Sultan Rashid Dunecrest','Sultan of the Sands'],cl:{c:'Dust storm',alt:'Clear',t:30,a:8,h:25,w:28}},
+{n:'Martlock',z:'Highland Province',dir:'North-West',a:216,k:'high',r:'Hide, Ore',t:'High hills, mountains, fog and plains',col:0x9a6a3a,blue:['Highlands Cross','Gutras Hill','Blackthorn Quarry','Mountain Blind','Hornbeam Wood','Birken Bank','Slackjaw Basin','Fareon Moor'],yel:['Eldon Hill','Brackendale','Lewsdon Hill','Cairn Camain','Cairn Gorm','Cairn Glascone'],red:['Great Cleave','Tor Glore','Creag Moor','Cairn Carron','Creag Meor','Creag Garr'],mon:['King Ewan Carrowmoor','High King of the Moors'],cl:{c:'Mist',alt:'Rain',t:9,a:5,h:80,w:14}}];
+const CORE=[
+{id:'K0',name:'Runnelvein Bog',a:0,rho:.13,bio:'Eastern gateway out of the swamps',links:['1r4','1r5'],dun:['group'],tier:'T7'},
+{id:'K1',name:'Bellever Tor',a:108,rho:.13,bio:'Southern crossroad where forests and steppes meet',links:['2r4','2r5','3r4'],dun:['group'],tier:'T7'},
+{id:'K2',name:'Creag Dhu',a:216,rho:.12,bio:'Rugged highland valley linking the west to the center',links:['4r4','4r5'],dun:['group'],tier:'T7'},
+{id:'K3',name:'Camlann',a:288,rho:.12,bio:'Central world-boss zone with high-tier resources and PvE threats',links:['0r4','0r5'],dun:['boss'],tier:'T8'}];
+const FAC=[
+{fn:'Mountain Faction',fcn:'White',fc:0xf2f2f2,wm:{n:'General Thora Ironheart',look:'A disciplined, heavily armored female knight in a white fur cloak and cold steel armor, wielding a massive warhammer before the grey-and-white mountain banner.'},mounts:'Winter Bear & Elite Winter Bear',ctrl:'The Mountain biome: treacherous frozen peaks, permanent snow fields and icy strongholds.'},
+{fn:'Swamp Faction',fcn:'Purple',fc:0x8a4fd0,wm:{n:'Archmage Lymond Ashmoor',look:'A powerful sorcerer in deep purple and dark green robes, carrying an illuminated crystal staff, flanked by a serpent-patterned swamp banner.'},mounts:'Swamp Salamander & Elite Swamp Salamander',ctrl:'The Swamp biome: murky open bogs, shallow waters and sunken thickets.'},
+{fn:'Forest Faction',fcn:'Green',fc:0x3fa34d,wm:{n:'Captain Flynn Swift',look:'An agile forest ranger in intricately detailed leather-and-leaf green rogue armor, carrying a composite recurve bow beneath a vibrant green banner.'},mounts:'Wild Boar & Elite Wild Boar',ctrl:'The Forest biome: dense old-growth woodlands, massive fallen logs and mossy groves.'},
+{fn:'Steppe Faction',fcn:'Orange',fc:0xe8821e,wm:{n:'Commander Yara Sunblaze',look:'A desert-hardened, agile commander in lightweight desert-plate mail wrapped in flowing orange and gold fabrics, with a curved scimitar under a sun-burst orange banner.'},mounts:'Terrorbird & Elite Terrorbird',ctrl:'The Steppe biome: sun-scorched deserts, dry canyon lands and arid sand dunes.'},
+{fn:'Highlands Faction',fcn:'Blue',fc:0x2f6fd6,wm:{n:'Angus McCraig',look:'A massive, rugged, dual-axe wielding highland warrior with a braided ginger beard and heavy plate armor, standing under Martlock\'s blue and stone-grey banner.'},mounts:'Bighorn Ram & Elite Bighorn Ram',ctrl:'The Highlands biome: steep grassy cliffs, rolling green hills and stone quarries.'}];
+REG.forEach((g,i)=>{Object.assign(g,FAC[i]);g.fcr=[(g.fc>>16&255)/255,(g.fc>>8&255)/255,(g.fc&255)/255]});
+const CF={fn:'Bandit Faction',fcn:'Black',wm:{n:'The Rogue Faction Master (The Smuggler)',look:'Shrouded in shadows, in dark leather and an ominous face-concealing cowl, carrying hidden daggers under a tattered crimson-and-black outlaw emblem.'},mounts:'Greywolf & Elite Greywolf',ruled:'Caerleon, at the heart of the Royal Continent',ctrl:'No biome. Caerleon rules the lawless Red Zones and triggers Bandit Assaults that temporarily seize outposts from the other five factions.'};
+const hexc=c=>'#'+c.toString(16).padStart(6,'0');
+const BS=[[.97,0],[.88,-12],[.88,12],[.77,-24],[.79,0],[.77,24],[.66,-14],[.66,14]],YS=[[.47,-10],[.47,10],[.50,-26],[.50,26],[.40,-16],[.40,16]],RS=[[.30,-14],[.30,14],[.34,-28],[.34,28],[.22,-10],[.22,10]];
+const BE=[[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,6],[4,7],[5,7],[6,7]],YE=[[0,1],[0,2],[1,3],[0,4],[1,5],[4,5]],RE=[[0,1],[0,2],[1,3],[0,4],[1,5],[4,5]];
+const N={},E=[],ET={};
+const pos=(g,rho,dl)=>{const t=(g.a+dl)*Math.PI/180;return[400+345*rho*Math.cos(t),225+205*rho*Math.sin(t)]};
+const L=(a,b,t)=>{if(N[a]&&N[b])E.push([a,b,t||''])};
+N.C={id:'C',name:'Caerleon',x:400,y:225,risk:'red',city:1,tier:'Hub',res:'Marketplace, Black Market',bio:'Central free city and trade hub',dun:[],reg:'Central Core'};
+REG.forEach((g,i)=>{
+ const mk=(id,name,sl,risk,tier,dun,tag)=>{const[x,y]=pos(g,sl[0],sl[1]);N[id]={id,name,x,y,risk,tier,res:g.r,bio:g.t,dun,reg:g.z,pi:i,tag}};
+ g.blue.forEach((nm,q)=>mk(`${i}b${q}`,nm,BS[q],'blue',q<3?'T2':q<6?'T3':'T4',[],q===0?'Starter town':q>=6?'City approach':'Outer blue zone'));
+ const[cx,cy]=pos(g,.58,0);N['c'+i]={id:'c'+i,name:g.n,x:cx,y:cy,risk:'blue',city:1,tier:'Royal city',res:g.r+' nearby',bio:g.t,dun:[],reg:g.z,ci:i,pi:i,tag:'Royal city'};
+ g.yel.forEach((nm,q)=>mk(`${i}y${q}`,nm,YS[q],'yellow','T5',['solo'],q<2?'City buffer':'Yellow buffer'));
+ g.red.forEach((nm,q)=>mk(`${i}r${q}`,nm,RS[q],'red',q<4?'T6':'T7',(q%2?['solo']:['solo','group']).concat(q===0?['road']:[]),q<3?'Red gap':'Deep interior'));
+});
+CORE.forEach(c=>{const[x,y]=pos({a:c.a},c.rho,0);N[c.id]={id:c.id,name:c.name,x,y,risk:'red',tier:c.tier,res:'High-tier resources',bio:c.bio,dun:c.dun,reg:'Central Core',tag:'Core chokepoint'}});
+REG.forEach((g,i)=>{
+ BE.forEach(([a,b])=>L(`${i}b${a}`,`${i}b${b}`));YE.forEach(([a,b])=>L(`${i}y${a}`,`${i}y${b}`));RE.forEach(([a,b])=>L(`${i}r${a}`,`${i}r${b}`));
+ L(`${i}b3`,`${i}y2`);L(`${i}b5`,`${i}y3`);L(`${i}y4`,`${i}r0`);L(`${i}y5`,`${i}r1`);L(`${i}y2`,`${i}r2`);L(`${i}y3`,`${i}r3`);
+ ['b6','b7','y0','y1'].forEach(z=>L('c'+i,`${i}${z}`));
+ const j=(i+1)%5;L(`${i}b5`,`${j}b3`);L(`${i}b2`,`${j}b1`);L(`${i}y3`,`${j}y2`);L(`${i}r3`,`${j}r2`);
+ L(`${i}r0`,`${(i+2)%5}r0`,'avalon')});
+CORE.forEach(c=>{L('C',c.id,'road');c.links.forEach(l=>L(l,c.id))});
+const adj={};Object.keys(N).forEach(k=>adj[k]=[]);
+E.forEach(([a,b,t])=>{adj[a].push(b);adj[b].push(a);ET[a+'|'+b]=ET[b+'|'+a]=t});
+let UTC=new Date().getUTCHours()+new Date().getUTCMinutes()/60;
+const hash2=(a,b)=>{const n=Math.sin(a*12.9898+b*78.233)*43758.5453;return n-Math.floor(n)};
+const tzOf=i=>Math.round((N['c'+i].x*.05-5)/15);
+const condOf=(i,u)=>hash2(i+1,Math.floor(u/6))<.3?REG[i].cl.alt:REG[i].cl.c;
+const tempOf=(i,u)=>{const c=REG[i].cl,lt=(((u+tzOf(i))%24)+24)%24;return c.t+c.a*Math.sin((lt-9)/24*2*Math.PI)};
+const ltime=i=>{const h=(((UTC+tzOf(i))%24)+24)%24,hh=Math.floor(h),mm=Math.floor((h-hh)*60);return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')};
+const tzs=i=>(tzOf(i)>=0?'+':'−')+Math.abs(tzOf(i));
+const wtxt=i=>condOf(i,UTC)+', '+Math.round(tempOf(i,UTC))+'°C';
+const fmt=n=>Math.round(n).toLocaleString('en-US')+' silver';
+const tm=s=>Math.floor(s/60)+'m '+String(Math.round(s%60)).padStart(2,'0')+'s';
+function ecost(a,b,M){const t=ET[a+'|'+b],tl=(N[b].city?50:TOLL[N[b].risk])*M.toll,fee=t==='road'?200:t==='avalon'?1500:0;
+ return{toll:tl,up:M.up,fee,total:tl+M.up+fee,sec:M.sec*(t==='avalon'?.3:1)}}
+function dungeons(n){const o=[];n.dun.forEach(t=>{
+ if(t==='solo')o.push({kind:'Solo',fee:DF.solo[n.risk],m:[1.6,3.2],party:'1 player'});
+ if(t==='group')o.push({kind:'Group',fee:DF.group[n.risk],m:[2,4.5],party:n.risk==='black'?'5–20 players':'5 players'});
+ if(t==='road')o.push({kind:'Avalon road',fee:1500,m:[1.5,5],party:'1–7 players'});
+ if(t==='boss')o.push({kind:'World boss',fee:12000,m:[2.5,6],party:'20+ players'})});
+ return o.map(d=>({...d,lo:d.fee*d.m[0],hi:d.fee*d.m[1]}))}
+const dtxt=n=>{const d=dungeons(n);return d.length?d.map(x=>x.kind).join(', '):'None'};
+// ---------- terrain data ----------
+const OX=-40,OY=-19,NX=440,NY=244,MW=441,MH=245;
+const CX=400,CY=225,RX=345,RY=205,arcPt=(d,r)=>[CX+RX*r*Math.cos(d*Math.PI/180),CY+RY*r*Math.sin(d*Math.PI/180)];
+const wedge=(g,i)=>{const p=[[CX,CY]];for(let d=g.a-36;d<=g.a+36;d+=6)p.push(arcPt(d,1.03+.05*Math.sin(d*.37+i*2)+.03*Math.sin(d*1.3)));return p};
+const LAND=[{k:'plain',p:Array.from({length:14},(_,q)=>arcPt(q*360/14,.2+.03*Math.sin(q*2)))}].concat(
+ REG.map((g,i)=>({k:g.k,p:wedge(g,i),l:[g.z.toUpperCase(),...arcPt(g.a,.84)]})),
+ [{k:'snow',p:[[690,50],[720,42],[742,62],[715,76]]},{k:'swamp',p:[[30,30],[60,20],[85,35],[65,55],[38,52]]},{k:'forest',p:[[715,385],[745,378],[762,398],[738,415]]},{k:'desert',p:[[280,435],[312,430],[330,448],[300,460]]}]);
+const inside=(x,y,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[a,b]=P[i],[u,v]=P[j];if((b>y)!=(v>y)&&x<(u-a)*(y-b)/(v-b)+a)c=!c}return c};
+const hash=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)};
+const vn=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),a=hash(xi,yi),b=hash(xi+1,yi),c=hash(xi,yi+1),d=hash(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v};
+const fbm=(x,y)=>{let s=0,a=.5,f=1;for(let i=0;i<4;i++){s+=a*vn(x*f,y*f);f*=2;a*=.5}return s};
+const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
+const mask=new Float32Array(MW*MH),bio=new Int8Array(MW*MH).fill(-1);
+for(let b=0;b<MH;b++)for(let a=0;a<MW;a++){const px=OX+2*a,py=OY+2*b;for(let i=0;i<LAND.length;i++)if(inside(px,py,LAND[i].p)){mask[b*MW+a]=1;bio[b*MW+a]=i;break}}
+function blur(src,r){const t=new Float32Array(src.length),o=new Float32Array(src.length),n=2*r+1,cl=(v,m)=>Math.max(0,Math.min(m-1,v));
+ for(let b=0;b<MH;b++){let s=0;for(let a=-r;a<=r;a++)s+=src[b*MW+cl(a,MW)];for(let a=0;a<MW;a++){t[b*MW+a]=s/n;s+=src[b*MW+cl(a+r+1,MW)]-src[b*MW+cl(a-r,MW)]}}
+ for(let a=0;a<MW;a++){let s=0;for(let b=-r;b<=r;b++)s+=t[cl(b,MH)*MW+a];for(let b=0;b<MH;b++){o[b*MW+a]=s/n;s+=t[cl(b+r+1,MH)*MW+a]-t[cl(b-r,MH)*MW+a]}}
+ return o}
+let F=mask;for(let i=0;i<3;i++)F=blur(F,4);
+const cen=LAND.map(L=>[L.p.reduce((s,q)=>s+q[0],0)/L.p.length,L.p.reduce((s,q)=>s+q[1],0)/L.p.length]);
+const NNODES=Object.values(N);
+const VN=(NX+1)*(NY+1),H=new Float32Array(VN),BI=new Int8Array(VN),FF=new Float32Array(VN);
+for(let j=0;j<=NY;j++)for(let i=0;i<=NX;i++){const k=j*(NX+1)+i,px=OX+2*i,py=OY+2*j,m=k,f=F[m]+(fbm(px/16+7,py/16)-.5)*.34;let bi=bio[m];
+ if(bi<0){let md=1e9;cen.forEach((c,q)=>{const d=Math.hypot(c[0]-px,c[1]-py);if(d<md){md=d;bi=q}})}
+ BI[k]=bi;FF[k]=f;const L=sm(.2,.5,f),kind=LAND[bi].k;let r;
+ if(kind==='snow'){const q=1-Math.abs(2*fbm(px/45+3,py/45)-1);r=4+q*q*q*32+fbm(px/12,py/12)*3}
+ else if(kind==='high')r=3+fbm(px/50,py/50)*15+fbm(px/14,py/14)*2;
+ else if(kind==='forest')r=3+fbm(px/45,py/45)*11+fbm(px/13,py/13)*1.5;
+ else if(kind==='desert')r=2.5+Math.sin(px/9+fbm(px/30,py/30)*6)*1.1+fbm(px/40,py/40)*5+(fbm(px/60+9,py/60)>.6?7:0);
+ else if(kind==='swamp')r=1.3+fbm(px/30,py/30)*2.2;
+ else r=2.6+fbm(px/35,py/35)*4;
+ r+=(fbm(px/5,py/5)-.5)*(kind==='snow'?2.5:.9);
+ if(kind==='swamp'&&fbm(px/14+5,py/14)<.46&&!NNODES.some(n=>Math.hypot(n.x-px,n.y-py)<10))r=.5;
+ const sea=-8*(1-sm(0,.3,f))-.5;H[k]=sea*(1-L)+r*L}
+for(let p=0;p<5;p++){const T=H.slice();for(let j=1;j<NY;j++)for(let i=1;i<NX;i++){const k=j*(NX+1)+i;H[k]=(T[k]*4+T[k-1]+T[k+1]+T[k-NX-1]+T[k+NX+1])/8}}
+function segD(px,py,a,b){const dx=b[0]-a[0],dy=b[1]-a[1];let t=((px-a[0])*dx+(py-a[1])*dy)/(dx*dx+dy*dy);t=Math.max(0,Math.min(1,t));return Math.hypot(px-a[0]-t*dx,py-a[1]-t*dy)}
+const RIV=REG.map((g,i)=>[.18,.28,.38,.48,.58,.68,.78,.88,.98,1.06].map(r=>arcPt(g.a+12+4*Math.sin(r*9+i),r)));
+const RD=new Float32Array(VN).fill(99);
+RIV.forEach(pl=>{for(let q=0;q<pl.length-1;q++){const a=pl[q],b=pl[q+1],i0=Math.max(0,Math.floor((Math.min(a[0],b[0])-6-OX)/2)),i1=Math.min(NX,Math.ceil((Math.max(a[0],b[0])+6-OX)/2)),j0=Math.max(0,Math.floor((Math.min(a[1],b[1])-6-OY)/2)),j1=Math.min(NY,Math.ceil((Math.max(a[1],b[1])+6-OY)/2));
+ for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*(NX+1)+i,d=segD(OX+2*i,OY+2*j,a,b);if(d<RD[k])RD[k]=d}}});
+for(let k=0;k<VN;k++)if(RD[k]<4&&H[k]>.6){const w=1-sm(1.4,4,RD[k]);H[k]=H[k]*(1-w)+Math.min(H[k],Math.max(.55,H[k]*.3))*w}
+const cities=Object.values(N).filter(n=>n.city);
+cities.forEach(c=>{const ci=Math.round((c.x-OX)/2),cj=Math.round((c.y-OY)/2),base=Math.max(2.6,Math.min(8,H[cj*(NX+1)+ci]));c.base=base;
+ for(let j=0;j<=NY;j++)for(let i=0;i<=NX;i++){const d=Math.hypot(OX+2*i-c.x,OY+2*j-c.y);if(d<36){const w=1-sm(13,36,d),k=j*(NX+1)+i;H[k]=H[k]*(1-w)+base*w}}});
+function hAt(px,py){const fx=(px-OX)/2,fy=(py-OY)/2,i=Math.max(0,Math.min(NX-1,Math.floor(fx))),j=Math.max(0,Math.min(NY-1,Math.floor(fy))),u=fx-i,v=fy-j,k=j*(NX+1)+i;
+ return H[k]*(1-u)*(1-v)+H[k+1]*u*(1-v)+H[k+NX+1]*(1-u)*v+H[k+NX+2]*u*v}
+const P3=n=>new THREE.Vector3(n.x-400,Math.max(hAt(n.x,n.y),.4),n.y-225);
+// ---------- three.js ----------
+const stage=document.getElementById('stage'),cpg=document.getElementById('cpg'),sbl=document.getElementById('sbl'),sbt=document.getElementById('sbt');
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio));stage.prepend(renderer.domElement);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const cv=renderer.domElement,scene=new THREE.Scene();scene.background=new THREE.Color(0x8aa4bf);scene.fog=new THREE.FogExp2(0x8aa4bf,.00033);
+const skyU={top:{value:new THREE.Color(.16,.32,.6)},hor:{value:new THREE.Color(.66,.77,.88)}};
+const sky=new THREE.Mesh(new THREE.SphereGeometry(2600,32,16),new THREE.ShaderMaterial({uniforms:skyU,side:THREE.BackSide,depthWrite:false,fog:false,vertexShader:'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform vec3 top;uniform vec3 hor;varying vec3 p;void main(){float h=normalize(p).y;vec3 low=hor*.25;vec3 c=h>0.?mix(hor,top,pow(h,.55)):mix(hor,low,pow(-h,.4));gl_FragColor=vec4(c,1.);}'}));sky.frustumCulled=false;scene.add(sky);
+const camera=new THREE.PerspectiveCamera(45,1,1,6000);
+const controls=new THREE.OrbitControls(camera,cv);controls.enableDamping=true;controls.maxPolarAngle=Math.PI;controls.minDistance=15;controls.maxDistance=1800;controls.screenSpacePanning=true;controls.zoomSpeed=1.2;
+const stp=new Float32Array(900);for(let q=0;q<300;q++){const a=Math.random()*6.28,e=.12+Math.random()*1.4;stp[q*3]=2400*Math.cos(a)*Math.cos(e);stp[q*3+1]=2400*Math.sin(e);stp[q*3+2]=2400*Math.sin(a)*Math.cos(e)}
+const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.BufferAttribute(stp,3));const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:2,sizeAttenuation:false,fog:false,transparent:true,opacity:0,depthWrite:false}));scene.add(stars);
+const HOME=[new THREE.Vector3(0,330,380),new THREE.Vector3(0,0,10)],TOP=[new THREE.Vector3(0,720,60),new THREE.Vector3(0,0,10)];
+camera.position.copy(HOME[0]);controls.target.copy(HOME[1]);
+const hemi=new THREE.HemisphereLight(0xcfe2ff,0x4a3b24,.75);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0d0,1);sun.position.set(260,380,200);sun.castShadow=true;sun.shadow.mapSize.set(Math.min(4096,renderer.capabilities.maxTextureSize),Math.min(4096,renderer.capabilities.maxTextureSize));Object.assign(sun.shadow.camera,{left:-480,right:480,top:320,bottom:-320,near:10,far:1400});sun.shadow.bias=-.0006;sun.shadow.normalBias=.6;sun.shadow.camera.updateProjectionMatrix();scene.add(sun);
+const cc=new THREE.Color(),cA=new THREE.Color(),cB=new THREE.Color();
+const COL=new Float32Array(VN*3),COL2=new Float32Array(VN*3),COL3=new Float32Array(VN*3);
+const PAL={snow:['#b9b4d6','#f6f4fc','#7e7aa0'],high:['#5b6b2f','#8d9a55','#8a8570'],forest:['#33552a','#557a35'],desert:['#e4a94f','#f0c273'],swamp:['#66702f','#7f8a3c'],plain:['#6f7f39','#8a9648']};
+for(let j=0;j<=NY;j++)for(let i=0;i<=NX;i++){const k=j*(NX+1)+i,px=OX+2*i,py=OY+2*j,h=H[k],f=FF[k],kind=LAND[BI[k]].k,n=fbm(px/7,py/7);
+ if(f<.3){cA.set('#0f2a4a');cB.set('#2f8a9c');cc.copy(cA).lerp(cB,sm(-8,0,h))}
+ else if(h<1.7&&f<.5&&!(kind==='swamp')){cc.set('#dcc88e').lerp(cA.set('#c9b57a'),n)}
+ else{const p=PAL[kind];cA.set(p[0]);cB.set(p[1]);cc.copy(cA).lerp(cB,n);
+  if(kind==='snow'){cB.set(p[1]);cc.lerp(cB,sm(9,18,h));if(h<8)cc.lerp(cA.set('#7f9a78'),.35*(1-n))}
+  if(kind==='high'&&h>11)cc.lerp(cB.set(p[2]),sm(11,17,h));
+  if(kind==='swamp'&&h<.7)cc.set('#3f86c8');
+  if(kind==='desert')cc.lerp(cB.set('#b8792c'),h>7?.6:.0)}
+ if(RD[k]<2.4&&f>.3&&h>0)cc.lerp(cA.set('#2f6fae'),1-sm(1,2.4,RD[k]));
+ if(h>-.9&&h<.5)cc.lerp(cA.set('#e6f4f4'),.5*n);
+ const tt=(h/4)%1,dk=(h>1.6&&f>.35&&RD[k]>2.6&&tt<.06)?.7:1;
+ COL[k*3]=cc.r;COL[k*3+1]=cc.g;COL[k*3+2]=cc.b;COL2[k*3]=cc.r*dk;COL2[k*3+1]=cc.g*dk;COL2[k*3+2]=cc.b*dk;
+ {const bi=BI[k],pv=bi>=1&&bi<=5?bi-1:-1;let c3=[cc.r,cc.g,cc.b];
+  if(f>.35){const rho=Math.hypot((px-400)/345,(py-225)/205);
+   if(pv>=0){const fr=REG[pv].fcr;c3=c3.map((v,q)=>v*.5+fr[q]*.5);if(rho<.4)c3=c3.map(v=>v*.55)}
+   else if(bi===0)c3=c3.map(v=>v*.35)}
+  COL3[k*3]=c3[0];COL3[k*3+1]=c3[1];COL3[k*3+2]=c3[2]}}
+const geo=new THREE.PlaneGeometry(880,488,NX,NY);geo.rotateX(-Math.PI/2);
+for(let k=0;k<VN;k++)geo.attributes.position.setY(k,H[k]);
+geo.setAttribute('color',new THREE.BufferAttribute(COL.slice(),3));geo.computeVertexNormals();
+const terrain=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,side:THREE.DoubleSide}));terrain.receiveShadow=true;terrain.castShadow=true;scene.add(terrain);
+const wc=document.createElement('canvas');wc.width=wc.height=256;{const x=wc.getContext('2d'),im=x.createImageData(256,256);for(let i=0;i<256;i++)for(let j=0;j<256;j++){const v=(vn(i/12,j/12)*.6+vn(i/5,j/5)*.4)*255,o=(j*256+i)*4;im.data[o]=im.data[o+1]=im.data[o+2]=v;im.data[o+3]=255}x.putImageData(im,0,0)}
+const wt=new THREE.CanvasTexture(wc);wt.wrapS=wt.wrapT=THREE.RepeatWrapping;wt.repeat.set(60,40);
+const wat=new THREE.Mesh(new THREE.PlaneGeometry(2400,1600),new THREE.MeshStandardMaterial({color:0x2f78b0,transparent:true,opacity:.72,roughness:.12,metalness:.35,bumpMap:wt,bumpScale:.8,side:THREE.DoubleSide}));wat.receiveShadow=true;wat.rotation.x=-Math.PI/2;wat.position.y=.2;scene.add(wat);
+const deep=new THREE.Mesh(new THREE.PlaneGeometry(2400,1600),new THREE.MeshBasicMaterial({color:0x0a1830}));deep.rotation.x=-Math.PI/2;deep.position.y=-9.5;scene.add(deep);
+// scatter details
+let rs=5;const rnd=()=>(rs=(rs*16807)%2147483647)/2147483647;
+const nearCity=(x,y)=>cities.some(c=>Math.hypot(c.x-x,c.y-y)<20);
+function scatter(kinds,count,g,mat,sc,cols,minH,maxH,yo){const im=new THREE.InstancedMesh(g,mat,count),d=new THREE.Object3D();let n=0,t=0;
+ while(n<count&&t<count*40){t++;const px=OX+rnd()*880,py=OY+rnd()*488,m=Math.round((py-OY)/2)*MW+Math.round((px-OX)/2);
+  if(m<0||m>=mask.length||bio[m]<0||!kinds.includes(LAND[bio[m]].k)||F[m]<.8||nearCity(px,py))continue;
+  const h=hAt(px,py);if(h<minH||h>maxH)continue;const s=sc[0]+rnd()*(sc[1]-sc[0]);
+  d.position.set(px-400,h+yo*s,py-225);d.rotation.y=rnd()*6;d.scale.set(s,s*(.8+rnd()*.6),s);d.updateMatrix();im.setMatrixAt(n,d.matrix);
+  im.setColorAt(n,cc.set(cols[Math.floor(rnd()*cols.length)]));n++}
+ im.castShadow=true;im.count=n;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;scene.add(im)}
+const tree=new THREE.ConeGeometry(1.3,4.5,6);tree.translate(0,2.2,0);
+const M0=new THREE.MeshStandardMaterial({roughness:.9});
+scatter(['forest'],1100,tree,M0,[.8,1.5],['#2a5a2a','#3b7a34','#245224','#4a8a3a'],2,14,0);
+scatter(['high','plain'],320,tree,M0,[.7,1.2],['#4a5f2a','#5d7332','#3f5226'],2,11,0);
+scatter(['snow'],260,tree,M0,[.7,1.3],['#e8f0ee','#a9c2b0','#d4e0e0'],2,9,0);
+const rock=new THREE.DodecahedronGeometry(1.4);
+scatter(['desert'],140,rock,M0,[.6,1.8],['#c99552','#b98444','#d9a866'],1.7,20,.3);
+scatter(['high'],120,rock,M0,[.6,1.6],['#8a8570','#77735f'],4,25,.3);
+const dead=new THREE.CylinderGeometry(.15,.25,3,5);dead.translate(0,1.5,0);
+scatter(['swamp'],160,dead,M0,[.7,1.4],['#3a3320','#4a4028'],.9,5,0);
+// labels
+function label(text,size,color,sx,sy,cw){const c=document.createElement('canvas');const W0=cw||512;c.width=W0;c.height=W0/4;const x=c.getContext('2d');x.font=`bold ${size}px Georgia`;x.textAlign='center';x.textBaseline='middle';x.lineWidth=9;x.strokeStyle='rgba(0,0,0,.8)';x.lineJoin='round';x.strokeText(text,W0/2,W0/8);x.fillStyle=color;x.fillText(text,W0/2,W0/8);
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.scale.set(sx,sy,1);s.renderOrder=10;return s}
+const labelsG=new THREE.Group();scene.add(labelsG);
+LAND.forEach(L=>{if(L.l){const s=label(L.l[0],62,'#f3e8c8',110,27.5);s.material.opacity=.85;s.position.set(L.l[1]-400,hAt(L.l[1],L.l[2])+34,L.l[2]-225);labelsG.add(s)}});
+// cities
+function makeCity(col,dark){const g=new THREE.Group(),stone=new THREE.MeshStandardMaterial({color:0xd2cab6,roughness:.9}),roof=new THREE.MeshStandardMaterial({color:col,roughness:.7}),wood=new THREE.MeshStandardMaterial({color:0xa07c52,roughness:.9});
+ const R=6.8;
+ for(let i=0;i<12;i++){const a=i/12*Math.PI*2,b=(i+.5)/12*Math.PI*2;
+  const w=new THREE.Mesh(new THREE.BoxGeometry(3.7,1.7,.55),stone);w.position.set(Math.cos(b)*R,.85,Math.sin(b)*R);w.rotation.y=-(b+Math.PI/2);g.add(w);
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.75,.85,2.8,8),stone);t.position.set(Math.cos(a)*R,1.4,Math.sin(a)*R);g.add(t);
+  const c=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.6,8),roof);c.position.set(Math.cos(a)*R,3.6,Math.sin(a)*R);g.add(c)}
+ for(let i=0;i<20;i++){const a=rnd()*6.28,r=1.5+rnd()*4;const h=new THREE.Mesh(new THREE.BoxGeometry(1.3,1+rnd(),1.3),i%3?stone:wood);h.position.set(Math.cos(a)*r,.6,Math.sin(a)*r);g.add(h);
+  const rf=new THREE.Mesh(new THREE.ConeGeometry(1.15,.9,4),roof);rf.rotation.y=Math.PI/4;rf.position.set(h.position.x,h.position.y+.9,h.position.z);g.add(rf)}
+ const kp=new THREE.Mesh(new THREE.BoxGeometry(2.4,5.5,2.4),stone);kp.position.y=2.75;g.add(kp);
+ const kr=new THREE.Mesh(new THREE.ConeGeometry(2,3.2,4),dark?new THREE.MeshStandardMaterial({color:0x220a0a}):roof);kr.rotation.y=Math.PI/4;kr.position.y=7.1;g.add(kr);
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,2.2,4),wood);pole.position.y=9.6;g.add(pole);
+ const flag=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.8),new THREE.MeshBasicMaterial({color:col,side:THREE.DoubleSide}));flag.position.set(.7,10.2,0);g.add(flag);
+ return g}
+const pickables=[],spin=[],mkr={},zoneLab=[];let namesOn=true;
+Object.values(N).forEach(n=>{const p=P3(n),grp=new THREE.Group();grp.position.copy(p);scene.add(grp);
+ if(n.city){const cm=makeCity(n.id==='C'?0x8a1c1c:REG[n.ci].fc,n.id==='C');cm.scale.setScalar(1.15);cm.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});grp.add(cm);
+  const hit=new THREE.Mesh(new THREE.SphereGeometry(9),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.position.y=4;hit.userData.id=n.id;grp.add(hit);pickables.push(hit);
+  const s=label(n.name,58,'#ffffff',48,12);s.position.set(p.x,p.y+17,p.z);labelsG.add(s)}
+ else{const pole=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,3.4,6),new THREE.MeshStandardMaterial({color:0x444444}));pole.position.y=1.7;grp.add(pole);
+  const sp=new THREE.Mesh(new THREE.SphereGeometry(1.8,16,12),new THREE.MeshStandardMaterial({color:C[n.risk],emissive:C[n.risk],emissiveIntensity:n.risk==='black'?.05:.35,roughness:.4}));sp.position.y=3.6;sp.userData.id=n.id;grp.add(sp);pickables.push(sp);mkr[n.id]=sp;
+  {const zl=label(n.name,n.name.length>15?21:25,'#ffffff',30,7.5,256);zl.position.set(p.x,p.y+11,p.z);zl.visible=false;zoneLab.push(zl);scene.add(zl)}
+  const dn=n.dun,off=dn.length>1?[-2,2]:[0];dn.filter(t=>t!=='road').concat(dn.includes('road')?['road']:[]).forEach((t,q)=>{
+   let m;if(t==='solo')m=new THREE.Mesh(new THREE.ConeGeometry(1.2,2.8,5),new THREE.MeshStandardMaterial({color:0xffd24a,emissive:0x8a6a00}));
+   else if(t==='group')m=new THREE.Mesh(new THREE.OctahedronGeometry(1.6),new THREE.MeshStandardMaterial({color:0xff5a5a,emissive:0x701010}));
+   else if(t==='boss')m=new THREE.Mesh(new THREE.DodecahedronGeometry(2.4),new THREE.MeshStandardMaterial({color:0x7a1fa2,emissive:0x4c0f6e}));
+   else m=new THREE.Mesh(new THREE.TorusGeometry(1.5,.4,8,16),new THREE.MeshStandardMaterial({color:0xc084fc,emissive:0x5b21b6}));
+   m.position.set(dn.length>2?(q-1)*2.6:(off[q]||0),8,0);grp.add(m);spin.push(m)})}
+ });
+// roads
+const roadG=new THREE.Group();scene.add(roadG);
+function curve(a,b,y){const A=N[a],B=N[b],pts=[];for(let i=0;i<=12;i++){const t=i/12,x=A.x+(B.x-A.x)*t,z=A.y+(B.y-A.y)*t;pts.push(new THREE.Vector3(x-400,Math.max(hAt(x,z),.3)+y,z-225))}return new THREE.CatmullRomCurve3(pts)}
+E.forEach(([a,b,t])=>{const cu=curve(a,b,.9);
+ if(t==='avalon'){const g=new THREE.BufferGeometry().setFromPoints(cu.getPoints(40)),l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0xc084fc,dashSize:2.5,gapSize:1.5}));l.computeLineDistances();roadG.add(l)}
+ else roadG.add(new THREE.Mesh(new THREE.TubeGeometry(cu,20,t==='road'?.6:.38,4,false),new THREE.MeshStandardMaterial({color:t==='road'?0xe6d5a5:0xf1e8d0,roughness:.8})))});
+// route visuals
+const routeG=new THREE.Group();scene.add(routeG);
+// grid, clouds, fog
+const gridG=new THREE.Group();scene.add(gridG);
+const gm=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.3});
+for(let x=0;x<=800;x+=100){const p=[];for(let y=-15;y<=465;y+=6)p.push(new THREE.Vector3(x-400,Math.max(hAt(x,y),0)+.7,y-225));gridG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm))}
+for(let y=0;y<=400;y+=100){const p=[];for(let x=-35;x<=835;x+=6)p.push(new THREE.Vector3(x-400,Math.max(hAt(x,y),0)+.7,y-225));gridG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),gm))}
+'ABCDEFGH'.split('').forEach((c,i)=>{const l=label(c,80,'#ffffff',14,3.5);l.position.set(i*100+50-400,10,-20-225+5);gridG.add(l)});
+[50,150,250,350,440].forEach((y,i)=>{const l=label(String(i+1),80,'#ffffff',14,3.5);l.position.set(-38-400+10,10,y-225);gridG.add(l)});
+const cl=document.createElement('canvas');cl.width=cl.height=128;{const x=cl.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,62);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128)}
+const clT=new THREE.CanvasTexture(cl),cloudsG=new THREE.Group();scene.add(cloudsG);
+for(let c=0;c<22;c++){const cx=(rnd()-.5)*1000,cz=(rnd()-.5)*700,cy=120+rnd()*60;for(let q=0;q<4;q++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:clT,transparent:true,opacity:.5,depthWrite:false,fog:false}));const z=140+rnd()*120;s.scale.set(z,z*.6,1);s.position.set(cx+(rnd()-.5)*90,cy+(rnd()-.5)*10,cz+(rnd()-.5)*50);cloudsG.add(s)}}
+const weatherG=new THREE.Group();scene.add(weatherG);
+const WS={Snow:{c:0xffffff,s:1.6,vy:.3,vx:.1},Rain:{c:0x9ac0e8,s:1.1,vy:2.2,vx:.25},'Dust storm':{c:0xd9a95a,s:1.5,vy:0,vx:1.6}},PART=1400;
+const wx=REG.map((g,i)=>{const p3=new Float32Array(PART*3),xs=new Float32Array(PART),zs=new Float32Array(PART);
+ for(let q=0;q<PART;q++){const t=(g.a+(rnd()-.5)*70)*Math.PI/180,rho=.1+rnd()*.95;xs[q]=400+345*rho*Math.cos(t);zs[q]=225+205*rho*Math.sin(t);p3[q*3]=xs[q]-400;p3[q*3+1]=rnd()*70;p3[q*3+2]=zs[q]-225}
+ const gm2=new THREE.BufferGeometry();gm2.setAttribute('position',new THREE.BufferAttribute(p3,3));
+ const pts=new THREE.Points(gm2,new THREE.PointsMaterial({size:1.5,color:0xffffff,transparent:true,opacity:.85,depthWrite:false}));pts.visible=false;pts.frustumCulled=false;weatherG.add(pts);
+ const mist=[];for(let q=0;q<12;q++){const t=(g.a+(rnd()-.5)*64)*Math.PI/180,rho=.25+rnd()*.7,px=400+345*rho*Math.cos(t),pz=225+205*rho*Math.sin(t),m=new THREE.Sprite(new THREE.SpriteMaterial({map:clT,transparent:true,opacity:.06,depthWrite:false}));m.scale.set(80,34,1);m.position.set(px-400,hAt(px,pz)+7,pz-225);weatherG.add(m);mist.push(m)}
+ return{pts,p3,xs,zs,mist,cond:'Clear'}});
+function setWeather(u){wx.forEach((w,i)=>{const c=condOf(i,u),ws=WS[c];w.cond=c;w.pts.visible=!!ws;if(ws){w.pts.material.color.setHex(ws.c);w.pts.material.size=ws.s}
+ const mo=(c==='Mist'||c==='Fog')?.45:c==='Rain'?.14:.05;w.mist.forEach(m=>m.material.opacity=mo)})}
+function stepWeather(){if(!weatherG.visible)return;wx.forEach(w=>{const ws=WS[w.cond],p=w.p3;if(!ws)return;
+ for(let q=0;q<PART;q++){const o=q*3;p[o]+=ws.vx;p[o+1]-=ws.vy*(.7+.06*(q%10));const gd=Math.max(hAt(p[o]+400,p[o+2]+225),0);
+  if(w.cond==='Dust storm'){if(p[o]-(w.xs[q]-400)>60)p[o]=w.xs[q]-400;p[o+1]=gd+3+(q%17)}
+  else if(p[o+1]<gd){p[o]=w.xs[q]-400;p[o+1]=40+(q%30)}}
+ w.pts.geometry.attributes.position.needsUpdate=true})}
+const cDT=new THREE.Color(.16,.32,.6),cDH=new THREE.Color(.66,.77,.88),cNT=new THREE.Color(.02,.04,.1),cNH=new THREE.Color(.06,.1,.18),cDU=new THREE.Color(.95,.55,.3),cSun=new THREE.Color(0xfff0d0),cMoon=new THREE.Color(0x7f9cff);
+function applyTime(u){const sol=u+1,ang=(sol-6)/24*2*Math.PI,se=Math.sin(ang),day=Math.max(0,Math.min(1,se*3+.5)),night=se<0,az=sol/24*2*Math.PI+(night?Math.PI:0),el=Math.abs(Math.asin(se))*.9+.2;
+ sun.position.set(Math.cos(az)*Math.cos(el)*480,Math.sin(el)*480,Math.sin(az)*Math.cos(el)*480);
+ sun.intensity=day*1.05+(1-day)*.14;sun.color.copy(cMoon).lerp(cSun,day);hemi.intensity=.2+.55*day;
+ skyU.top.value.copy(cNT).lerp(cDT,day);skyU.hor.value.copy(cNH).lerp(cDH,day).lerp(cDU,Math.max(0,1-Math.abs(se)/.35)*.5);
+ scene.background.copy(skyU.hor.value);scene.fog.color.copy(skyU.hor.value);stars.material.opacity=1-day}
+
+// ---------- UI ----------
+const info=document.getElementById('info'),A=document.getElementById('a'),B=document.getElementById('b'),MO=document.getElementById('mo'),OP=document.getElementById('op'),AV=document.getElementById('v'),out=document.getElementById('out');
+const ps=document.getElementById('ps'),pd=document.getElementById('pd'),ptab=document.getElementById('pt'),tl=document.getElementById('tl'),tt=document.getElementById('tt');
+REG.forEach((g,i)=>ps.insertAdjacentHTML('beforeend',`<option value="${i}">${g.fn} – ${g.z}</option>`));ps.insertAdjacentHTML('beforeend','<option value="5">Bandit Faction – Caerleon</option>');
+function cheapest(s,t,M){const D={[s]:0},J={[s]:0},done=new Set();for(;;){let u=null;for(const k in D)if(!done.has(k)&&(u===null||D[k]<D[u]))u=k;if(u===null)return null;if(u===t)return{total:D[t],jumps:J[t]};done.add(u);adj[u].forEach(x=>{const nd=D[u]+ecost(u,x,M).total;if(!(x in D)||nd<D[x]){D[x]=nd;J[x]=J[u]+1}})}}
+function provHTML(i){const chip=c=>`<i style="display:inline-block;width:12px;height:12px;background:${c};border:1px solid #888;border-radius:3px;vertical-align:-1px"></i> `;
+ if(i===5)return `${chip('#111')}<b>${CF.fn}</b> – ${CF.fcn}<small>Ruled city: ${CF.ruled}</small>🗡 <b>Warmaster ${CF.wm.n}</b><br>${CF.wm.look}<br>Mounts: ${CF.mounts}<br>Controls: ${CF.ctrl}<br><button id="ba">Trigger bandit assault</button>`;
+ const g=REG[i],c=g.cl,cnt=k=>Object.values(N).filter(n=>n.pi===i&&n.risk===k&&!n.city).length,cp=cheapest(`${i}b0`,'c'+i,MD.mount);
+ return `${chip(hexc(g.fc))}<b>${g.fn}</b> – ${g.fcn}<small>${g.z} · ${g.dir} · ruled city ${g.n}</small>⚔ <b>Warmaster ${g.wm.n}</b><br>${g.wm.look}<br>Mounts: ${g.mounts}<br>Controls: ${g.ctrl}<br>
+ Zones: ${cnt('blue')} blue · ${cnt('yellow')} yellow · ${cnt('red')} red (red zones held by Caerleon's bandits)<br>
+ Time zone: UTC${tzs(i)} · local time ${ltime(i)}<br>Weather: ${wtxt(i)} · humidity ${c.h}% · wind ${c.w} km/h<br>Resources: ${g.r}<br>
+ Silver: treasury ≈ ${Math.round(18+hash2(i,3)*30)} million (fiction) · gate fee ${fmt(50)}<br>Tolls on foot: blue ${fmt(TOLL.blue)}, yellow ${fmt(TOLL.yellow)}, red ${fmt(TOLL.red)}<br>
+ ${g.blue[0]} → ${g.n}: ${cp?fmt(cp.total)+' by mount, '+cp.jumps+' jumps':'—'}`}
+function refreshProv(){tt.textContent=String(Math.floor(UTC)).padStart(2,'0')+':'+String(Math.floor((UTC%1)*60)).padStart(2,'0');
+ ptab.innerHTML=REG.map((g,i)=>`<div><b>${g.n}</b> ${ltime(i)} (UTC${tzs(i)}) · ${wtxt(i)}</div>`).join('');pd.innerHTML=provHTML(+ps.value||0)}
+ps.onchange=refreshProv;
+let lastQ=-1;function updateAll(f){applyTime(UTC);setWeather(UTC);const q=Math.floor(UTC*4);if(f||q!==lastQ){lastQ=q;refreshProv()}}
+function show(n){const dd=dungeons(n),pi=n.pi!==undefined?n.pi:n.ci,g=REG[pi];
+ info.innerHTML=`<b>${n.city?'🏰 ':''}${n.name}</b><small>${n.reg} · ${n.tier}${n.tag?' · '+n.tag:''}</small>
+ Risk: <b style="color:${C[n.risk]}">${n.risk}</b> – ${RISK[n.risk]}<br>Biome: ${n.bio}<br>Resources: ${n.res}<br>
+ ${g?`Faction: <b>${g.fn}</b> (${g.fcn}) · Warmaster ${g.wm.n}<br>${n.risk==='red'?'Red zone: lawless, patrolled by Caerleon bandits<br>':''}Local ${ltime(pi)} (UTC${tzs(pi)}) · ${wtxt(pi)}<br>`:'Held by the Bandit Faction (Black) · Warmaster '+CF.wm.n+'<br>'}
+ ${n.city?`Buildings: Marketplace, Bank, Blacksmith, Mage tower, Stables, Guild hall<br>Gate fee: ${fmt(50)}`:`Entry toll: ${fmt(TOLL[n.risk])} (on foot)`}
+ ${dd.length?'<br><b>Dungeons</b>'+dd.map(d=>`<small>${d.kind} · ${d.party}<br>Entry: ${fmt(d.fee)} · Est. loot: ${fmt(d.lo)} – ${fmt(d.hi)}</small>`).join(''):''}`;
+ if(g&&+ps.value!==pi){ps.value=pi;pd.innerHTML=provHTML(pi)}}
+Object.values(N).forEach(n=>{const o=`<option value="${n.id}">${n.name}${n.city?'':' ('+n.risk+')'}</option>`;A.insertAdjacentHTML('beforeend',o);B.insertAdjacentHTML('beforeend',o)});
+A.value='0b0';B.value='c4';
+let fly=null;
+function flyTo(v,dist){const off=dist?new THREE.Vector3(0,dist*.75,dist*.7):camera.position.clone().sub(controls.target);fly={t:0,from:controls.target.clone(),to:v.clone(),cf:camera.position.clone(),ct:v.clone().add(off)}}
+// dungeon list
+const DUN=[];Object.values(N).forEach(n=>dungeons(n).forEach(d=>DUN.push({n,...d})));
+function dlist(){const f=document.getElementById('df').value,el=document.getElementById('dl');
+ el.innerHTML=DUN.filter(d=>!f||d.kind===f).sort((a,b)=>a.fee-b.fee).map(d=>`<div data-id="${d.n.id}"><b>${d.kind}</b> – ${d.n.name} <span style="color:${d.n.risk==='black'?'inherit':C[d.n.risk]}">(${d.n.risk})</span><small>Entry ${fmt(d.fee)} · loot ${fmt(d.lo)} – ${fmt(d.hi)} · ${d.party}</small></div>`).join('')}
+dlist();document.getElementById('df').onchange=dlist;
+document.getElementById('dl').onclick=e=>{const d=e.target.closest('[data-id]');if(d){const n=N[d.dataset.id];show(n);flyTo(P3(n),70)}};
+// picking
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+function pick(e){const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mv,camera);const h=ray.intersectObjects(pickables,false)[0];return h?h.object.userData.id:null}
+const NAMES={swamp:'Swamp',snow:'Snow mountains',high:'Highland',desert:'Steppe / desert',forest:'Forest',plain:'Plains'},ro=document.getElementById('ro');
+let lastRO=0;function readout(e){const now=performance.now();if(now-lastRO<60)return;lastRO=now;const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mv,camera);
+ const o=ray.ray.origin,d=ray.ray.direction;let t=0,hit=null;
+ for(let q=0;q<1500;q++){t+=q<200?3:8;const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(Math.abs(x)>440||Math.abs(z)>244)continue;if(y<=Math.max(hAt(x+400,z+225),0)){hit=[x,z];break}}
+ if(!hit){ro.textContent='Move the cursor over the map for coordinates and elevation.';return}
+ const px=hit[0]+400,py=hit[1]+225,h=hAt(px,py),m=Math.round((py-OY)/2)*MW+Math.round((px-OX)/2),b=bio[m]>=0?NAMES[LAND[bio[m]].k]:'Open sea';
+ ro.textContent=`Grid ${'ABCDEFGH'[Math.max(0,Math.min(7,Math.floor(px/100)))]}${Math.max(1,Math.min(5,Math.floor(py/100)+1))} · ${(50-py*.045).toFixed(2)}°N ${(px*.05-5).toFixed(2)}°E · ${h<0?'Depth '+Math.round(-h*60)+' m':'Elevation '+Math.round(h*100).toLocaleString()+' m'} · ${b}`}
+function setView(az,pol){const t=controls.target.clone(),dd=Math.max(150,camera.position.distanceTo(t)),a=az*Math.PI/180,p=pol*Math.PI/180;fly={t:0,from:t,to:t.clone(),cf:camera.position.clone(),ct:new THREE.Vector3(t.x+dd*Math.sin(p)*Math.sin(a),t.y+dd*Math.cos(p),t.z+dd*Math.sin(p)*Math.cos(a))}}
+let hov=null,down=null,pk=0;
+cv.addEventListener('pointermove',e=>{if(e.buttons)return;readout(e);const id=pick(e);if(id!==hov){if(hov&&mkr[hov])mkr[hov].scale.setScalar(1);hov=id;cv.style.cursor=id?'pointer':'grab';if(id){show(N[id]);if(mkr[id])mkr[id].scale.setScalar(1.5)}}});
+cv.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
+cv.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const id=pick(e);if(id){(pk?B:A).value=id;pk^=1;show(N[id]);route()}});
+// toolbar
+const tg=(id,fn)=>{const b=document.getElementById(id);b.onclick=()=>{fn(b)}};
+tg('bR',()=>{flyTo(HOME[1]);fly.ct=HOME[0].clone()});tg('bT',()=>{flyTo(TOP[1]);fly.ct=TOP[0].clone()});
+tg('bL',b=>{labelsG.visible=!labelsG.visible;b.classList.toggle('on')});tg('bD',b=>{roadG.visible=!roadG.visible;b.classList.toggle('on')});
+tg('bG',b=>{gridG.visible=!gridG.visible;b.classList.toggle('on')});tg('bK',b=>{cloudsG.visible=!cloudsG.visible;b.classList.toggle('on')});
+let provOn=false,contoursOn=false,assault=null;
+function applyColors(){const ca=geo.attributes.color;ca.array.set(provOn?COL3:contoursOn?COL2:COL);ca.needsUpdate=true}
+function paintMarkers(){Object.values(N).forEach(n=>{const m=mkr[n.id];if(!m)return;let c=C[n.risk],e=c;
+ if(provOn){c=n.risk==='red'?'#1a1a1a':hexc(REG[n.pi].fc);e=n.risk==='red'?'#5a0000':c}
+ if(assault&&assault.id===n.id){c='#000000';e='#ff1111'}
+ m.material.color.set(c);m.material.emissive.set(e)})}
+const facG=new THREE.Group();facG.visible=false;scene.add(facG);
+REG.forEach(g=>{const[x,y]=pos(g,.72,0),l=label(g.n.toUpperCase()+' · '+g.fcn.toUpperCase(),34,hexc(g.fc),64,16);l.position.set(x-400,hAt(x,y)+58,y-225);facG.add(l)});
+{const l=label('CAERLEON · BLACK',34,'#d0d0d0',64,16);l.position.set(0,hAt(400,225)+46,0);facG.add(l)}
+tg('bP',b=>{provOn=!provOn;b.classList.toggle('on');facG.visible=provOn;applyColors();paintMarkers()});
+tg('bC',b=>{b.classList.toggle('on');contoursOn=!contoursOn;applyColors()});
+function banditAssault(){const ys=Object.values(N).filter(n=>n.risk==='yellow'&&!n.city),n=ys[Math.floor(Math.random()*ys.length)];
+ if(assault&&mkr[assault.id])mkr[assault.id].scale.setScalar(1);assault={id:n.id,until:performance.now()+20000};paintMarkers();show(n);
+ info.insertAdjacentHTML('beforeend','<br><b>⚠ Bandit assault!</b> Caerleon\'s bandits seized this outpost from the '+REG[n.pi].fn+' for 20 seconds.');flyTo(P3(n),80)}
+pd.onclick=e=>{if(e.target&&e.target.id==='ba')banditAssault()};
+tg('vN',()=>setView(180,60));tg('vE',()=>setView(90,60));tg('vS',()=>setView(0,60));tg('vW',()=>setView(270,60));tg('vL',()=>setView(0,78));tg('vU',()=>setView(20,150));
+tg('bW',b=>{weatherG.visible=!weatherG.visible;b.classList.toggle('on')});tg('bN',b=>{namesOn=!namesOn;b.classList.toggle('on')});
+tg('bS',b=>{controls.autoRotate=!controls.autoRotate;controls.autoRotateSpeed=.6;b.classList.toggle('on')});
+// route
+function route(){
+ const s=A.value,t=B.value,v=+AV.value,opt=OP.value,M=MD[MO.value];
+ while(routeG.children.length)routeG.remove(routeG.children[0]);
+ const ok=id=>id===s||id===t||N[id].city||!(v===2?['yellow','red'].includes(N[id].risk):v===1&&N[id].risk==='red');
+ const w=(a,b)=>opt==='jumps'?1:opt==='silver'?ecost(a,b,M).total:1+ORD.indexOf(N[b].risk)*4;
+ const D={[s]:0},prev={[s]:null},done=new Set();
+ for(;;){let u=null;for(const k in D)if(!done.has(k)&&(u===null||D[k]<D[u]))u=k;if(u===null||u===t)break;done.add(u);
+  adj[u].forEach(x=>{if(!ok(x))return;const nd=D[u]+w(u,x);if(!(x in D)||nd<D[x]){D[x]=nd;prev[x]=u}})}
+ if(!(t in prev)){out.textContent='No route found with those restrictions.';return}
+ const path=[];for(let u=t;u!==null;u=prev[u])path.unshift(u);
+ if(path.length<2){out.textContent='Start and destination are the same zone.';return}
+ let tot=0,tolls=0,ups=0,fees=0,sec=0;const rows=[];
+ path.forEach((p,i)=>{let c=null;if(i){c=ecost(path[i-1],p,M);tot+=c.total;tolls+=c.toll;ups+=c.up;fees+=c.fee;sec+=c.sec}rows.push({p,c,cum:tot})});
+ // 3D route
+ const pts=[];path.forEach((p,i)=>{if(i){curve(path[i-1],p,1.6).getPoints(12).slice(i>1?1:0).forEach(q=>pts.push(q))}});
+ routeG.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),Math.max(20,pts.length*2),.9,6,false),new THREE.MeshStandardMaterial({color:0xfb923c,emissive:0xc2410c,emissiveIntensity:.9})));
+ path.forEach((p,i)=>{const q=P3(N[p]),s2=label(String(i+1),96,'#ffb066',14,3.5);s2.position.set(q.x,q.y+(N[p].city?22:13),q.z);routeG.add(s2)});
+ const mid=pts[Math.floor(pts.length/2)];flyTo(new THREE.Vector3(mid.x,0,mid.z));
+ const top=path.reduce((m,p)=>Math.max(m,ORD.indexOf(N[p].risk)),0),regs=[...new Set(path.map(p=>N[p].reg))],
+  res=[...new Set(path.flatMap(p=>N[p].res.split(', ').filter(r=>!/nearby|Market/.test(r))))],
+  dz=path.filter(p=>N[p].dun.length),av=path.some((p,i)=>i&&ET[path[i-1]+'|'+p]==='avalon');
+ out.innerHTML=`<div class="sum"><b>${path.length-1} jumps · ${fmt(tot)} · ${tm(sec)}</b> (${M.n})<br>${N[s].name} → ${N[t].name}<br>
+ Breakdown: tolls ${fmt(tolls)}, mount/cargo upkeep ${fmt(ups)}, road & portal fees ${fmt(fees)}<br>
+ Regions: ${regs.join(' → ')}<br>Highest risk: <b style="color:${top&&ORD[top]!=='black'?C[ORD[top]]:'inherit'}">${ORD[top]}</b> – ${RISK[ORD[top]]}<br>
+ Resources on the way: ${res.join(', ')||'none'}<br>Dungeon zones on route: ${dz.length}${av?'<br>Uses an Avalon road portal':''}</div><ol class="rl">`+
+ rows.map(({p,c,cum},i)=>{const n=N[p],dd=dungeons(n);return `<li style="border-color:${n.risk==='black'?'#888':C[n.risk]}"><b>${i+1}. ${n.name}</b>
+ <small>${n.reg} · ${n.risk} · ${n.tier}<br>${n.bio}<br>Resources: ${n.res}${c?`<br>This jump: ${fmt(c.total)} (toll ${fmt(c.toll)}${c.fee?', fee '+fmt(c.fee):''}) · running total ${fmt(cum)}`:'<br>Start of route'}
+ ${dd.length?'<br>Dungeons: '+dd.map(d=>`${d.kind} (entry ${fmt(d.fee)}, loot ~${fmt(d.lo)}–${fmt(d.hi)})`).join('; '):''}
+ ${i&&i<path.length-1&&ORD.indexOf(n.risk)>=2?'<br>⚠ '+RISK[n.risk]:''}</small></li>`}).join('')+'</ol>';
+}
+tl.value=UTC;let playing=false;tl.oninput=()=>{UTC=+tl.value;updateAll()};
+document.getElementById('tLive').onclick=()=>{UTC=new Date().getUTCHours()+new Date().getUTCMinutes()/60;tl.value=UTC;updateAll(true)};
+document.getElementById('tPlay').onclick=()=>{playing=!playing;document.getElementById('tPlay').textContent=playing?'Pause':'Play'};
+document.getElementById('go').onclick=route;[AV,MO,OP,A,B].forEach(e=>e.onchange=route);
+// loop
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+(function loop(){requestAnimationFrame(loop);
+ if(fly){fly.t=Math.min(1,fly.t+.03);const e=fly.t*fly.t*(3-2*fly.t);controls.target.lerpVectors(fly.from,fly.to,e);camera.position.lerpVectors(fly.cf,fly.ct,e);if(fly.t>=1)fly=null}
+ spin.forEach(m=>m.rotation.y+=.025);
+ if(playing){UTC=(UTC+.008)%24;tl.value=UTC;updateAll()}stepWeather();if(assault){const m=mkr[assault.id];if(performance.now()>assault.until){m.scale.setScalar(1);assault=null;paintMarkers()}else m.scale.setScalar(1.5+.3*Math.sin(performance.now()/150))}{const cp=camera.position;zoneLab.forEach(z=>{z.visible=namesOn&&cp.distanceTo(z.position)<230})}
+ wt.offset.x+=.0003;wt.offset.y+=.0002;cloudsG.children.forEach(s=>{s.position.x+=.04;if(s.position.x>650)s.position.x=-650});
+ sky.position.copy(camera.position);controls.update();
+ cpg.setAttribute('transform','rotate('+(controls.getAzimuthalAngle()*180/Math.PI)+')');
+ const dist=camera.position.distanceTo(controls.target),ppu=stage.clientHeight/2/(Math.tan(camera.fov*Math.PI/360)*dist),km=[1,2,5,10,20,50,100,200,500].find(k=>k*2*ppu>=60)||500;
+ sbl.style.width=km*2*ppu+'px';sbt.textContent=km+' km (approx.)';
+ renderer.render(scene,camera)})();
+updateAll(true);route();
+})()}catch(e){document.getElementById('stage').innerHTML='<div id="err">3D view could not start (WebGL is required): '+e.message+'</div>'}
+</script></body></html>
